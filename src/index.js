@@ -1,16 +1,14 @@
-module.exports =
-
-function solveSudoku(matrix) {
+module.exports =function solveSudoku(matrix) {
     // your solution
 
-    let steps = 0;
-    let backtracking_call = 0;
-    let rezervSolved ,
+    let steps = 0,
+        backtracking_call = 0,
+        reserveSolved,
         row,
         col,
-        variantsDigit;
-    let solvedMatrix = initSolved(matrix);
-    let resultSudoku = solve(solvedMatrix);
+        variantsDigit,
+        solvedMatrix = initSolved(matrix),
+        resultSudoku = solve(solvedMatrix);
 
     return result(resultSudoku);
 
@@ -60,7 +58,6 @@ function solveSudoku(matrix) {
 
         while (!isSolved(solved)) {
             // используем поиск с возвратом
-            //!isSolved(solved) && !isFailed(solved)
             solved = backtracking(solved);
         }
         return solved;
@@ -80,7 +77,7 @@ function solveSudoku(matrix) {
                     // Здесь решение либо найдено, либо задано
                     continue;
                 }
-                // "Одиночка"
+                // "Явный единственный вариант"
                 if (1 === solveSingle(solved, i, j)) {
                     changed++;
                 } else {
@@ -94,7 +91,7 @@ function solveSudoku(matrix) {
 
 
     /**
-     * Метод "Одиночка"
+     * Метод "Явный единственный вариант"
      */
     function solveSingle(solved, i, j) {
         solved[i][j][2] = arrayDiff(solved[i][j][2], rowContent(solved, i));
@@ -145,7 +142,7 @@ function solveSudoku(matrix) {
 
 
     /**
-     * Отмечаем найденный элемент
+     * Отмечаем найденный элемент как решение
      */
     function markSolved(sol, i, j, solve) {
         sol[i][j][0] = solve;
@@ -247,7 +244,7 @@ function solveSudoku(matrix) {
 
 
     /**
-     * Вычисление разницы между двумя массивами
+     * Вычисление разницы между двумя массивами(используем для сравнения вариантов по строке=>столбцу=>секции )
      */
     function arrayDiff(ar1, ar2) {
         let arr_diff = [];
@@ -266,7 +263,6 @@ function solveSudoku(matrix) {
         return arr_diff;
     } // end of method arrayDiff()
 
-
     /**
      * Расчет смещения секции
      */
@@ -276,7 +272,6 @@ function solveSudoku(matrix) {
             i: Math.floor(i / 3) * 3
         };
     } // end of method sectOffset()
-
 
     /**
      * Вывод найденного решения
@@ -293,7 +288,7 @@ function solveSudoku(matrix) {
     }
 
     /**
-     * Проверка на найденное решение
+     * Проверка на найденное решение - не осталось элементов с меткой 'unknown'
      */
     function isSolved(solved) {
         let is_solved = true;
@@ -308,7 +303,6 @@ function solveSudoku(matrix) {
         return is_solved;
     } // end of method isSolved()
 
-
     /**
      * Есть ли ошибка в поиске решения
      *
@@ -316,7 +310,6 @@ function solveSudoku(matrix) {
      * отсутствуют кандидаты
      */
     function isFailed(solved) {
-        let is_failed = false;
         for (let i = 0; i < 9; i++) {
             for (let j = 0; j < 9; j++) {
                 if ('unknown' === solved[i][j][1] && !solved[i][j][2].length) {
@@ -324,7 +317,7 @@ function solveSudoku(matrix) {
                 }
             }
         }
-        return is_failed;
+        return false;
     } // end of method isFailed()
 
     /**
@@ -332,175 +325,75 @@ function solveSudoku(matrix) {
      */
     function backtracking(solved) {
 
+        if(10 < backtracking_call) throw new Error('слишком много вариантов');
 
-        if(10 < backtracking_call) throw new Error('hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh');
-        //для мин топиндекс максимальный, а для мах = 0
         let topIndex = 9,
-            findNumer = 0;
-
-
+            findNumber = 0;
 
         if (!isFailed(solved)) {
 
             // резервная копия массива с возможным вариантом решения
-            rezervSolved = [[], [], [], [], [], [], [], [], []];
+            reserveSolved = [[], [], [], [], [], [], [], [], []];
             for ( let i=0; i<9; i++ ) {
-                rezervSolved[i].length = 9;
+                reserveSolved[i].length = 9;
                 for ( let j=0; j<9; j++ ) {
-                    rezervSolved[i][j] = solved[i][j][0];
+                    reserveSolved[i][j] = solved[i][j][0];
                 }
             }
-
-            // // Ищем построчно самый длинный массив вариантов
-            // let mostLengthArrayOfVariants = 0;
-            // let topIndex = 0,
-            //     findNumer = 0;
-            //
-            // for (let i = 0; i < 9; i++) {
-            //     for (let j = 0; j < 9; j++) {
-            //         if ('unknown' === solved[i][j][1] && mostLengthArrayOfVariants < solved[i][j][2].length) {
-            //             mostLengthArrayOfVariants = solved[i][j][2].length;
-            //             row = i;
-            //             col = j;
-            //         }
-            //     }
-            // }
-            // let rez = [];
-            //
-            // for (let i = 0; i < 9; i++) {
-            //     for (let j = 0; j < mostLengthArrayOfVariants; j++) {
-            //
-            //
-            //         if (-1 !== solved[row][col][2].indexOf(solved[row][i][2][j])) {
-            //             rez.push(solved[row][i][2][j]);
-            //         }
-            //     }
-            // }
-            //
-            // variantsDigit = rez.reduce((acc, el) => {
-            //     acc[el] = (acc[el] || 0) + 1;
-            //     return acc;
-            // }, {});
-            //
-            //
-            // for (let key in variantsDigit) {
-            //     if (topIndex < +variantsDigit[key]) {
-            //         topIndex = +variantsDigit[key];
-            //         findNumer = +key;
-            //
-            //     }
 
             // Ищем построчно самый короткий массив вариантов
-                let minLengthArrayOfVariants = 9;
+            let minLengthArrayOfVariants = 9;
 
-
-                for (let i = 0; i < 9; i++) {
-                    for (let j = 0; j < 9; j++) {
-                        if ('unknown' === solved[i][j][1] && minLengthArrayOfVariants > solved[i][j][2].length) {
-                            minLengthArrayOfVariants = solved[i][j][2].length;
-                            row = i;
-                            col = j;
-                        }
+            for (let i = 0; i < 9; i++) {
+                for (let j = 0; j < 9; j++) {
+                    if ('unknown' === solved[i][j][1] && minLengthArrayOfVariants > solved[i][j][2].length) {
+                        minLengthArrayOfVariants = solved[i][j][2].length;
+                        row = i;
+                        col = j;
                     }
                 }
-                let rez = [];
-
-                for (let i = 0; i < 9; i++) {
-                    for (let j = 0; j < minLengthArrayOfVariants; j++) {
-
-
-                        if (-1 !== solved[row][col][2].indexOf(solved[row][i][2][j])) {
-                            rez.push(solved[row][i][2][j]);
-                        }
-                    }
-                }
-
-                variantsDigit = rez.reduce((acc, el) => {
-                    acc[el] = (acc[el] || 0) + 1;
-                    return acc;
-                }, {});
-
-
-                for (let key in variantsDigit) {
-                    if (topIndex > +variantsDigit[key]) {
-                        topIndex = +variantsDigit[key];
-                        findNumer = +key;
-
-                    }
-
-
-                markSolved(solved, row, col, findNumer);
-                delete variantsDigit[findNumer];
-
-                return solve(solved);
-
-
-
             }
-        } else {
-            backtracking_call++;
-            solved = initSolved(rezervSolved);
-            //
-            //
-            // for (let key in variantsDigit) {
-            //     if (topIndex < +variantsDigit[key]) {
-            //         topIndex = +variantsDigit[key];
-            //         findNumer = +key;
-            //
-            //     }
+            let rez = [];
+
+            for (let i = 0; i < 9; i++) {
+                for (let j = 0; j < minLengthArrayOfVariants; j++) {
+
+                    if (-1 !== solved[row][col][2].indexOf(solved[row][i][2][j])) {
+                        rez.push(solved[row][i][2][j]);
+                    }
+                }
+            }
+
+            variantsDigit = rez.reduce((acc, el) => {
+                acc[el] = (acc[el] || 0) + 1;
+                return acc;
+            }, {});
 
             for (let key in variantsDigit) {
                 if (topIndex > +variantsDigit[key]) {
                     topIndex = +variantsDigit[key];
-                    findNumer = +key;
-
+                    findNumber = +key;
                 }
 
-                markSolved(solved, row, col, findNumer);
-                delete variantsDigit[findNumer];
+                markSolved(solved, row, col, findNumber);
+                delete variantsDigit[findNumber];  //удаляем уже подставленный элемент
+                return solve(solved);
+            }
+        } else {
 
+            backtracking_call++;
+            solved = initSolved(reserveSolved); //возврат резервного массива после неудачной подстановки
+
+            for (let key in variantsDigit) {
+                if (topIndex > +variantsDigit[key]) {
+                    topIndex = +variantsDigit[key];
+                    findNumber = +key;
+                }
+
+                markSolved(solved, row, col, findNumber);
+                delete variantsDigit[findNumber]; //удаляем уже подставленный элемент
                 return solve(solved);
             }
         }
     } // end of function backtracking)(
 };
-
-//
-//
-// function isSolved(initial, sudoku) {
-//     for (let i = 0; i < 9; i++) {
-//         let [r,c] = [Math.floor(i/3)*3,(i%3)*3];
-//         if (
-//             (sudoku[i].reduce((s,v)=>s.add(v),new Set()).size !== 9) ||
-//             (sudoku.reduce((s,v)=>s.add(v[i]),new Set()).size !== 9) ||
-//             (sudoku.slice(r,r+3).reduce((s,v)=>v.slice(c,c+3).reduce((s,v)=>s.add(v),s),new Set()).size !== 9)
-//         ) return false;
-//     }
-//     return initial.every((row, rowIndex) => {
-//         return row.every((num, colIndex) => {
-//             return num === 0 || sudoku[rowIndex][colIndex] === num;
-//         });
-//     });
-// }
-//
-// const initial = [
-//     [0, 0, 4, 0, 5, 0, 0, 0, 0],
-//     [3, 5, 0, 0, 0, 0, 6, 9, 7],
-//     [6, 7, 0, 0, 0, 0, 0, 0, 0],
-//     [4, 0, 0, 6, 8, 0, 0, 0, 0],
-//     [0, 6, 0, 0, 0, 0, 0, 8, 0],
-//     [0, 8, 0, 5, 0, 0, 3, 0, 0],
-//     [0, 3, 0, 9, 0, 0, 7, 0, 5],
-//     [0, 4, 0, 8, 0, 0, 0, 0, 9],
-//     [0, 0, 0, 0, 0, 3, 0, 1, 0]
-// ];
-//
-//
-// const copy = initial.map(r => [...r]);
-//
-//
-// let yyyyyy = solveSudoku(copy);
-//
-// let jjjj = isSolved(initial,yyyyyy);
-//
-// let hhh = jjjj;
